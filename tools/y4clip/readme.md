@@ -27,5 +27,5 @@ Create a new y4m video stream from an existing y4m video stream, with options to
 
 Create new video stream consisting of first 100 frames of input stream cropped to 1080 x 1080:
 
-    > ./y4clip -i aspen.y4v -o aspen-clip.y4v -w 1080 -h 1080 -s 1 -e 100
+    > ./y4clip -i aspen.y4m -o aspen-clip.y4m -w 1080 -h 1080 -s 1 -e 100
 
