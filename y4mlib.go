@@ -253,7 +253,7 @@ func (s *Stream) SkipFrame() error {
 // SkipFrameHeader skips past a frame header.
 func (s *Stream) SkipFrameHeader() error {
 	r := bufio.NewReader(s.file)
-	b, err := r.ReadBytes('\x0a')
+	b, err := r.ReadBytes('\n')
 	if err != nil {
 		return err
 	}
@@ -295,7 +295,7 @@ func (s *Stream) ParseFrame() (*Frame, error) {
 	return frame, nil
 }
 
-// ParseFrameHeader parses a frame header. A frame header consists of magic string "FRAME",
+// ParseFrameHeader parses a frame header. A frame header consists of string "FRAME",
 // any number of tagged fields preceded by ' ' separator, and '\n'.
 func (s *Stream) ParseFrameHeader() (*FrameHeader, error) {
 	h := new(FrameHeader)
@@ -414,8 +414,8 @@ func (s *Stream) FrameImageDataSize() int64 {
 	return int64(s.LumaPlaneSize() + 2*s.ChromaPlaneSize() + s.AlphaPlaneSize())
 }
 
-// Crop crops the frame image to width w and height h, horizontally offset from the top-left of
-// the original frame by xOffset, and vertically offset by yOffset. The frame's w and h
+// Crop crops the frame image to width w and height h, offset from the top left of the
+// original frame horizontally by xOffset, and vertically by yOffset. The frame's w and h
 // fields are updated.
 func (f *Frame) Crop(w, h, xOffset, yOffset int) error {
 	if w+xOffset > f.Width {

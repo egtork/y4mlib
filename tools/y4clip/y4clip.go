@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 
 	"github.com/egtork/y4mlib"
 )
@@ -18,13 +17,11 @@ var (
 	outFile      = flag.String("o", "", "output file")
 	newWidth     = flag.Int("w", -1, "cropped width; -1 for original width")
 	newHeight    = flag.Int("h", -1, "cropped height; -1 for original height")
-	xOffsetStr   = flag.String("x", "c", "horizontal offset; integer or \"c\" to center")
-	yOffsetStr   = flag.String("y", "c", "vertical offset; integer or \"c\" to center")
+	xOffset      = flag.Int("x", -1, "horizontal offset; -1 to center")
+	yOffset      = flag.Int("y", -1, "vertical offset; -1 to center")
 	startFrame   = flag.Int("s", 1, "start frame")
 	endFrame     = flag.Int("e", -1, "end frame; -1 for last frame of input stream")
 	stripHeaders = flag.Bool("strip", false, "strip header information")
-	xOffset      int
-	yOffset      int
 )
 
 func main() {
@@ -62,8 +59,8 @@ func main() {
 			break
 		}
 		checkErr(err)
-		if sOut.Height != sIn.Height && sOut.Width != sIn.Width {
-			frame.Crop(*newHeight, *newWidth, xOffset, yOffset)
+		if sOut.Height != sIn.Height || sOut.Width != sIn.Width {
+			frame.Crop(*newWidth, *newHeight, *xOffset, *yOffset)
 		}
 		if !*stripHeaders {
 			err = sOut.WriteFrameHeader(frame)
@@ -77,7 +74,6 @@ func main() {
 }
 
 func setAndCheckUserInputs(s *y4m.Stream) error {
-	var err error
 	if *startFrame < 1 {
 		return fmt.Errorf("start frame must be greater than 0")
 	}
@@ -106,26 +102,16 @@ func setAndCheckUserInputs(s *y4m.Stream) error {
 		return fmt.Errorf("choose height as a multiple of %d to accomodate chroma subsampling",
 			s.YSubsamplingFactor)
 	}
-	if *xOffsetStr == "c" {
-		xOffset = s.XSubsamplingFactor * (s.Width - *newWidth) / 2 / s.XSubsamplingFactor
-	} else {
-		xOffset, err = strconv.Atoi(*xOffsetStr)
-		if err != nil {
-			return err
-		}
+	if *xOffset == -1 {
+		*xOffset = s.XSubsamplingFactor * (s.Width - *newWidth) / 2 / s.XSubsamplingFactor
 	}
-	if xOffset+*newWidth > s.Width {
+	if *xOffset+*newWidth > s.Width {
 		return fmt.Errorf("horizontal offset + cropped width cannot exceed original width (%d)", s.Width)
 	}
-	if *yOffsetStr == "c" {
-		yOffset = s.YSubsamplingFactor * ((s.Height - *newHeight) / 2 / s.YSubsamplingFactor)
-	} else {
-		yOffset, err = strconv.Atoi(*yOffsetStr)
-		if err != nil {
-			return err
-		}
+	if *yOffset == -1 {
+		*yOffset = s.YSubsamplingFactor * ((s.Height - *newHeight) / 2 / s.YSubsamplingFactor)
 	}
-	if yOffset+*newHeight > s.Height {
+	if *yOffset+*newHeight > s.Height {
 		return fmt.Errorf("vertical offset + cropped height cannot exceed original height (%d)", s.Height)
 	}
 	return nil
